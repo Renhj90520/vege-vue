@@ -1,0 +1,107 @@
+<template>
+    <div class="container">
+        <div class="padding-all">
+            <div class="address-list">
+                <p v-for="(address,i) in addresses">
+                    <span>
+                        <input :id="'add'+i" name="address" type="radio" v-model="address.ischecked" @change="onAddressChange(address)">
+                        <label :for="'add'+i">{{address.Street}}</label>
+                        <br> {{address.Name}} {{address.Phone}}</span>
+                    <span class="right">
+                        <i class="glyphicon glyphicon-remove" role="button" @click="onAddrRemove(address)"></i>
+                    </span>
+                </p>
+                <button class="btn btn-primary" data-target="#addaddress" data-toggle="modal">新建地址</button>
+    
+                <div class="modal fade" id="addaddress">
+                    <div class="jumbotron">
+                        <form method="post">
+                            <div class="form-group">
+                                <label for="username">姓名</label>
+                                <input class="form-control" id="username" name="username" type="text" required v-model="newAddr.Name">
+                                <!--<p class="error-label" *ngIf="name.touched&&!name.valid">姓名不能为空</p>-->
+                            </div>
+                            <div class="form-group">
+                                <label for="userphone">电话</label>
+                                <input class="form-control" id="userphone" name="userphone" type="number" required v-model="newAddr.Phone">
+                                <!--<p class="error-label" *ngIf="phone.touched&&!phone.valid">电话不能为空</p>-->
+                            </div>
+                            <div class="form-group">
+                                <span>新疆省</span>
+                                <span>昌吉市</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="userstreet">详细地址</label>
+                                <input class="form-control" id="userstreet" name="userstreet" type="textarea" required v-model="newAddr.Street">
+                                <!--<p class="error-label" *ngIf="street.touched&&!street.valid">详细地址不能为空</p>-->
+                            </div>
+                            <button class="btn btn-primary" data-target="#addaddress" data-toggle="modal" type="submit" @click="onAddAddress">添加</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-xs-12 paddingvertical" v-for="product in products">
+                    <div class="pic">
+                        <img class="productimg img-responsive" :src="product.Pictures[0].Path" alt>
+                    </div>
+                    <div class="info">
+                        <p class="name">{{product.Name}}</p>
+                        <p class="name red bold">￥{{product.Price}}/{{product.UnitName}}
+                            <span class="right">
+                                <button class="btn btn-primary btn-xs" @click="onDecrease(product)">
+                                    <i class="glyphicon glyphicon-minus"></i>
+                                </button>
+                                <input class="form-control inline" type="number" disabled v-model="product.Count" min="0">
+                                <button class="btn btn-primary btn-xs" @click="onIncrease(product)">
+                                    <i class="glyphicon glyphicon-plus"></i>
+                                </button>
+                            </span>
+                        </p>
+                        <p class="item-total red bold">小计：￥{{product.Cost}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="operator row">
+            <div class="col-xs-8 total red bold">总计:￥{{totalCost}}
+                <span class="red bold" v-if="hasDelivery">含运费￥5(满20免运费)</span>
+            </div>
+            <div class="col-xs-4 button" @click="gotoOrders">确认购买</div>
+        </div>
+    </div>
+</template>
+<script>
+export default {
+    data() {
+        return {
+            addresses: [],
+            newAddr: {},
+            products: [],
+            totalCost: 0,
+            hasDelivery: false
+        }
+    },
+    methods: {
+        onAddAddress() { },
+        gotoOrders() { }
+    }
+}
+</script>
+<style scoped>
+.modal {
+    padding: 20px;
+}
+
+.item-total {
+    font-size: 16px;
+    color: red;
+}
+
+.error-label {
+    font-size: 14px;
+    color: red;
+    margin-top: 5px;
+}
+</style>
