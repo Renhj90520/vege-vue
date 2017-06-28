@@ -1,6 +1,6 @@
 <template>
     <div class="row margin">
-        <div class="col-md-3 col-sm-6 col-xs-12 paddingvertical" v-for="(product, index) in products">
+        <div class="col-md-3 col-sm-6 col-xs-12 paddingvertical" v-for="(product,index) in products" :product="product" :index="index">
             <div class="pic" v-if="product.Pictures">
                 <router-link tag="a" :to="{name:'productdetail',params:{id:3}}">
                     <img class="productimg img-responsive" :src="product.Pictures[0].Path" alt>
@@ -12,11 +12,11 @@
                     <p class="font-large red bold">￥{{product.Price}}/{{product.UnitName}}</p>
                 </router-link>
                 <p>
-                    <button class="btn btn-primary btn-xs" @click="onDecrease(index)">
+                    <button class="btn btn-primary btn-xs" @click="onDecrease(product)">
                         <i class="glyphicon glyphicon-minus"></i>
                     </button>
-                    <input class="form-control inline" disabled type="number" disabled v-model="product.Count" min="0">
-                    <button class="btn btn-primary btn-xs" @click="onIncrease(index)">
+                    <input class="form-control inline" disabled type="number" v-model="product.Count" min="0">
+                    <button class="btn btn-primary btn-xs" @click="onIncrease(product)">
                         <i class="glyphicon glyphicon-plus"></i>
                     </button>
                 </p>
@@ -33,11 +33,11 @@ export default {
         }
     },
     methods: {
-        onDecrease(index) {
-            this.$emit('decrease', index)
+        onDecrease(product) {
+            this.$emit('decrease', product)
         },
-        onIncrease(index) {
-            this.$emit('increase', index)
+        onIncrease(product) {
+            this.$emit('increase', product)
         }
     }
 }

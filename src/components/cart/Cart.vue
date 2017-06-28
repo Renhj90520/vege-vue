@@ -57,11 +57,60 @@
     </div>
 </template>
 <script>
+import { baseUrl } from '../shared/settings.js'
+import axios from 'axios'
+var utils = require('../shared/utils.js')
 export default {
     data() {
         return {
             products: [],
-            suggestions: []
+            suggestions: [],
+            totalCost: 0
+        }
+    },
+    created() {
+        this.products = JSON.parse(sessionStorage.getItem('cartproducts')) || []
+        if (this.products.length < 0) {
+            axios.get(baseUrl + 'products' + '?index=1&perPage=10')
+                .then(res => {
+                    this.suggestions = res.data.body.items
+                })
+        } else {
+            this.products.forEach(p => {
+                p.Cost = utils.mutiple(p.Count, p.Price)
+            })
+            this.handleDelievery()
+        }
+    },
+    methods: {
+        onDecrease(product) {
+            product.Count = utils.subtraction(product.Count, product.Step);
+            if (product.Count < 0) {
+                product.Count = 0;
+            }
+            product.Cost = utils.mutiple(product.Count, product.Price);
+            this.handleDelievery();
+            sessionStorage.setItem("cartproducts", JSON.stringify(this.products));
+        },
+        onIncrease(product) {
+            product.Count = utils.add(product.Count, product.Step);
+            product.Cost = utils.mutiple(product.Count, product.Price);
+            this.handleDelievery();
+            sessionStorage.setItem("cartproducts", JSON.stringify(this.products));
+        },
+        handleDelievery() {
+            let total = this.products.map(p => utils.mutiple(p.Price, p.Count)).reduce((x, y) => utils.add(x, y));
+            if (total < 20 && total > 0) {
+                this.hasDelivery = true;
+                this.totalCost = utils.add(total, 5);
+            } else {
+                this.hasDelivery = false;
+                this.totalCost = total;
+            }
+        },
+        gotoOrder() {
+            sessionStorage.setItem("cartproducts", JSON.stringify(this.products));
+            this.$router.push('order')
         }
     }
 }

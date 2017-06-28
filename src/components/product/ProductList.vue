@@ -10,7 +10,30 @@
                 <!--<img src="http://placehold.it/60x60" class="categories" alt="icon" role="button" @click="onCategoryClick(category.id)">-->
             </div>
         </div>
-        <app-product-counter :products="products" @increase="increase" @decrease="decrease"></app-product-counter>
+        <div class="row margin">
+            <div class="col-md-3 col-sm-6 col-xs-12 paddingvertical" v-for="(product,index) in products" :product="product" :index="index">
+                <div class="pic" v-if="product.Pictures">
+                    <router-link tag="a" :to="{name:'productdetail',params:{id:3}}">
+                        <img class="productimg img-responsive" :src="product.Pictures[0].Path" alt>
+                    </router-link>
+                </div>
+                <div class="info">
+                    <router-link tag="a" :to="{name:'productdetail',params:{id:product.Id}}">
+                        <p class="font-middle gray bold">{{product.Name}}</p>
+                        <p class="font-large red bold">￥{{product.Price}}/{{product.UnitName}}</p>
+                    </router-link>
+                    <p>
+                        <button class="btn btn-primary btn-xs" @click="onDecrease(product)">
+                            <i class="glyphicon glyphicon-minus"></i>
+                        </button>
+                        <input class="form-control inline" disabled type="number" v-model="product.Count" min="0">
+                        <button class="btn btn-primary btn-xs" @click="onIncrease(product)">
+                            <i class="glyphicon glyphicon-plus"></i>
+                        </button>
+                    </p>
+                </div>
+            </div>
+        </div>
         <div v-if="products.length<=0">
             <hr>
             <p class="no-product">暂无商品</p>
@@ -25,10 +48,11 @@
 import { baseUrl } from '../shared/settings.js'
 import AppProductCounter from '../shared/ProductCounter.vue'
 import axios from 'axios'
+var utils = require('../shared/utils.js')
 export default {
-    components: {
-        appProductCounter: AppProductCounter
-    },
+    // components: {
+    //     appProductCounter: AppProductCounter
+    // },
     data() {
         return {
             products: [],
@@ -38,40 +62,89 @@ export default {
             product: {}
         }
     },
-    created() {
-        const vm = this;
-        axios.get(baseUrl + 'categories').then(function (res) {
-            if (res.data.state == 1) {
-                vm.categories = res.data.body;
-            } else {
-                alert(res.data.message);
-            }
-        }).catch(function (err) {
-            console.log(err)
-        })
-        axios.get(baseUrl + 'products')
-            .then(function (res) {
-                if (res.data.state == 1) {
-                    vm.products = res.data.body.items;
-                    vm.products.forEach(function (product) {
-                        product.Count = 0;
-                    });
-                } else {
-                    alert(res.data.message)
+    async created() {
+        this.productsIncart = JSON.parse(sessionStorage.getItem("cartproducts")) || []
+        try {
+            const cateres = await axios.get(baseUrl + 'categories')
+            this.categories = cateres.data.body
+            if (this.categories.length > 0) {
+                this.products.splice(0, this.products.length)
+                let prores = await axios.get(baseUrl + 'products' + '?' + 'category=' + this.categories[0].Id)
+                prores.data.body.items.forEach(p => {
+                    p.Count = 0;
+                    this.products.push(p)
+                });
+                if (this.productsIncart.length > 0) {
+                    this.productsIncart.forEach((pc, index) => {
+                        let pp = this.products.find(pi => pi.Id == pc.Id);
+                        if (pp) {
+                            let pic = this.productsIncart[index];
+                            pp.Count = pic.Count;
+                            this.productsIncart[index] = pp;
+                        }
+                    })
                 }
-            }).catch(function (err) {
-                console.log(err)
-            })
+            }
+        } catch (error) {
+            alert(error)
+        }
     },
     methods: {
-        onCategoryClick(cateid) {
-            console.log('-----------cateId:' + cateid)
+        async onCategoryClick(cateid) {
+            let prores = await axios.get(baseUrl + 'products' + '?' + 'category=' + cateid)
+            this.products.splice(0, this.products.length)
+            prores.data.body.items.forEach(p => {
+                p.Count = 0;
+                this.products.push(p)
+            });
+            if (this.productsIncart.length > 0) {
+                this.productsIncart.forEach((pc, index) => {
+                    let pp = this.products.find(pi => pi.Id == pc.Id);
+                    if (pp) {
+                        let pic = this.productsIncart[index];
+                        pp.Count = pic.Count;
+                        this.productsIncart[index] = pp;
+                    }
+                })
+            }
         },
-        increase(index) {
-            console.log('----------index:' + index)
+        onIncrease(product) {
+            // let product = this.products[index];
+            product.Count = utils.add(product.Count, product.Step)
+            if (this.productsIncart.indexOf(product) < 0) {
+                this.productsIncart.push(product);
+            }
+
+            if (this.productsIncart.length > 0) {
+                sessionStorage.setItem('cartproducts', JSON.stringify(this.productsIncart));
+            }
         },
-        decrease(index) {
-            console.log('----------index:' + index)
+        onDecrease(product) {
+            // let product = this.products[index];
+
+            product.Count = utils.subtraction(product.Count, product.Step);
+            if (product.Count < 0) {
+                product.Count = 0;
+            }
+
+            let i = this.productsIncart.indexOf(product);
+            if (product.Count == 0) {
+                if (i >= 0) {
+                    this.productsIncart.splice(i, 1);
+                }
+            }
+            if (this.productsIncart.length > 0) {
+                sessionStorage.setItem('cartproducts', JSON.stringify(this.productsIncart))
+            } else {
+                sessionStorage.removeItem('cartproducts')
+            }
+        }, gotoOrder() {
+            if (this.productsIncart.length > 0) {
+                sessionStorage.setItem('cartproducts', JSON.stringify(this.productsIncart));
+                this.$router.push('order')
+            } else {
+                alert("未选择任何商品！")
+            }
         }
     }
 }

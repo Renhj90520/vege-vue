@@ -73,6 +73,9 @@
     </div>
 </template>
 <script>
+import { baseUrl } from '../shared/settings.js'
+import axios from 'axios'
+var utils = require('../shared/utils.js')
 export default {
     data() {
         return {
@@ -80,12 +83,100 @@ export default {
             newAddr: {},
             products: [],
             totalCost: 0,
-            hasDelivery: false
+            hasDelivery: false,
+            checkedaddress: {}
         }
     },
+    created() {
+        let openid = sessionStorage.getItem('openid');
+        axios.get(baseUrl + 'addresses/' + openid)
+            .then(res => {
+                if (res.data.state == 1) {
+                    this.addresses = res.data.body
+                    if (this.addresses && this.addresses.length > 0) {
+                        this.checkedaddress = addresses[0]
+                    }
+                } else {
+                    alret(res.data.message)
+                }
+            }).catch(err => {
+                alert(err)
+            })
+        this.products = JSON.parse(sessionStorage.getItem("cartproducts")) || [];
+        this.products.forEach(p => { p.Cost = utils.mutiple(p.Count, p.Price) });
+        this.handleDelievery();
+    },
     methods: {
-        onAddAddress() { },
-        gotoOrders() { }
+        onAddAddress() {
+            let openid = sessionStorage.getItem('openid') || '123';//TODO
+            this.newAddr.OpenId = openid;
+            axios.post(baseUrl + 'addresses', this.newAddr)
+                .then(res => {
+                    if (res.data.state == 1) {
+                        this.checkedaddress = res.data.body
+                        this.addresses.push(res.data.body)
+                    }
+                }).catch(err => {
+                    alert(err)
+                })
+        },
+        gotoOrders() {
+            let address = this.addresses.filter(a => a.ischecked);
+            if (address && address.length > 0) {
+                let openid = sessionStorage.getItem('openid');
+                let order = {
+                    // createtime: this.getNow(),
+                    DeliveryCharge: 0,
+                    State: 0, AddressId: address[0].Id, OpenId: openid, products: this.products.map(p => {
+                        return { ProductId: p.Id, Count: p.Count, Price: p.Price }
+                    })
+                };
+                if (this.hasDelivery) {
+                    order.DeliveryCharge = 5;
+                }
+                this.orderService.addOrder(order, null)
+                    .subscribe(res => {
+                        if (res.state == 1) {
+                            this.router.navigate(['orderlist'], { replaceUrl: true });
+                            sessionStorage.removeItem('cartproducts');
+                        } else {
+                            alert(res.message);
+                        }
+                    }, err => {
+                        if (err) {
+                            alert(err);
+                        }
+                    })
+            } else {
+                alert('请填选地址');
+            }
+        },
+        onDecrease(product) {
+            product.Count = utils.subtraction(product.Count, product.Step);
+            if (product.Count < 0) {
+                product.Count = 0;
+            }
+            product.Cost = utils.mutiple(product.Count, product.Price);
+            this.handleDelievery();
+            sessionStorage.setItem("cartproducts", JSON.stringify(this.products));
+        },
+        onIncrease(product) {
+            product.Count = utils.add(product.Count, product.Step);
+            product.Cost = utils.mutiple(product.Count, product.Price);
+
+            this.handleDelievery();
+            sessionStorage.setItem("cartproducts", JSON.stringify(this.products));
+        },
+        handleDelievery() {
+            let total = this.products.map(p => utils.mutiple(p.Price, p.Count)).reduce((x, y) => utils.add(x, y));
+            if (total < 20 && total > 0) {
+                this.hasDelivery = true;
+                this.totalCost = utils.add(total, 5);
+            } else {
+                this.hasDelivery = false;
+                this.totalCost = total;
+            }
+        }
     }
 }
 </script>

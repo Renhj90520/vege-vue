@@ -37,11 +37,26 @@
     </div>
 </template>
 <script>
+import { baseUrl } from '../shared/settings.js'
+import axios from 'axios'
+
 export default {
     data() {
         return {
             orders: []
         }
+    }, created() {
+        debugger
+        let openid = sessionStorage.getItem('openid') || '123'//TODO
+        axios.get(baseUrl + 'orders/' + openid)
+            .then(res => {
+                if (res.data.sate == 1) {
+                    this.orders = res.data.body.items;
+                } else {
+                    alert(res.data.message)
+                }
+            })
+
     }
 }
 </script>
