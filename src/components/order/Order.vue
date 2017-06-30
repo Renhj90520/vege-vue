@@ -18,13 +18,13 @@
                         <form method="post">
                             <div class="form-group">
                                 <label for="username">姓名</label>
-                                <input class="form-control" id="username" name="username" type="text" required v-model="newAddr.Name">
-                                <!--<p class="error-label" *ngIf="name.touched&&!name.valid">姓名不能为空</p>-->
+                                <input v-validate="required" class="form-control" id="username" name="username" type="text" v-model="newAddr.Name">
+                                <p class="error-label" v-show="fields.username&&fields.username.touched&&errors.has('username')">姓名不能为空</p>
                             </div>
                             <div class="form-group">
                                 <label for="userphone">电话</label>
-                                <input class="form-control" id="userphone" name="userphone" type="number" required v-model="newAddr.Phone">
-                                <!--<p class="error-label" *ngIf="phone.touched&&!phone.valid">电话不能为空</p>-->
+                                <input v-validate="'required'" class="form-control" id="userphone" name="userphone" type="number" v-model="newAddr.Phone">
+                                <p class="error-label" v-show="fields.userphone&&fields.userphone.touched&&errors.has('userphone')">电话不能为空</p>
                             </div>
                             <div class="form-group">
                                 <span>新疆省</span>
@@ -32,8 +32,8 @@
                             </div>
                             <div class="form-group">
                                 <label for="userstreet">详细地址</label>
-                                <input class="form-control" id="userstreet" name="userstreet" type="textarea" required v-model="newAddr.Street">
-                                <!--<p class="error-label" *ngIf="street.touched&&!street.valid">详细地址不能为空</p>-->
+                                <input v-validate="required" class="form-control" id="userstreet" name="userstreet" type="textarea" v-model="newAddr.Street">
+                                <p class="error-label" v-show="fields.userstreet&&fields.userstreet.touched&&errors.has('userstreet')">详细地址不能为空</p>
                             </div>
                             <button class="btn btn-primary" data-target="#addaddress" data-toggle="modal" type="submit" @click="onAddAddress">添加</button>
                         </form>
