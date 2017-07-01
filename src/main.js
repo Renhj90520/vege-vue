@@ -6,6 +6,7 @@ import router from './router'
 import './assets/css/bootstrap.min.css'
 import './assets/js/bootstrap'
 import VeeValidate from 'vee-validate'
+import { store } from './store/store.js'
 
 Vue.config.productionTip = false
 Vue.filter('mydate', value => {
@@ -28,6 +29,7 @@ Vue.use(VeeValidate)
 new Vue({
   el: '#app',
   router,
+  store,
   template: '<App/>',
   components: { App }
 })

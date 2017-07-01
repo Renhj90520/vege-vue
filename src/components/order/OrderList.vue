@@ -46,7 +46,6 @@ export default {
             orders: []
         }
     }, created() {
-        debugger
         let openid = sessionStorage.getItem('openid') || '123'//TODO
         axios.get(baseUrl + 'orders/' + openid)
             .then(res => {
